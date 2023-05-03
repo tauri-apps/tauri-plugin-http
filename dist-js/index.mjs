@@ -57,7 +57,7 @@ class Body {
         const append = (key, v) => {
             if (v !== null) {
                 let r;
-                if (typeof v === 'string') {
+                if (typeof v === "string") {
                     r = v;
                 }
                 else if (v instanceof Uint8Array || Array.isArray(v)) {
@@ -66,7 +66,7 @@ class Body {
                 else if (v instanceof File) {
                     r = { file: v.name, mime: v.type, fileName: v.name };
                 }
-                else if (typeof v.file === 'string') {
+                else if (typeof v.file === "string") {
                     r = { file: v.file, mime: v.mime, fileName: v.fileName };
                 }
                 else {
@@ -85,7 +85,7 @@ class Body {
                 append(key, value);
             }
         }
-        return new Body('Form', form);
+        return new Body("Form", form);
     }
     /**
      * Creates a new JSON body.
@@ -103,7 +103,7 @@ class Body {
      * @returns The body object ready to be used on the POST and PUT requests.
      */
     static json(data) {
-        return new Body('Json', data);
+        return new Body("Json", data);
     }
     /**
      * Creates a new UTF-8 string body.
@@ -118,7 +118,7 @@ class Body {
      * @returns The body object ready to be used on the POST and PUT requests.
      */
     static text(value) {
-        return new Body('Text', value);
+        return new Body("Text", value);
     }
     /**
      * Creates a new byte array body.
@@ -134,7 +134,7 @@ class Body {
      */
     static bytes(bytes) {
         // stringifying Uint8Array doesn't return an array of numbers, so we create one here
-        return new Body('Bytes', Array.from(bytes instanceof ArrayBuffer ? new Uint8Array(bytes) : bytes));
+        return new Body("Bytes", Array.from(bytes instanceof ArrayBuffer ? new Uint8Array(bytes) : bytes));
     }
 }
 /**
@@ -171,8 +171,8 @@ class Client {
      * ```
      */
     async drop() {
-        return invoke('plugin:http|drop_client', {
-            client: this.id
+        return invoke("plugin:http|drop_client", {
+            client: this.id,
         });
     }
     /**
@@ -192,9 +192,9 @@ class Client {
         if (jsonResponse) {
             options.responseType = ResponseType.Text;
         }
-        return invoke('plugin:http|request', {
+        return invoke("plugin:http|request", {
             clientId: this.id,
-            options
+            options,
         }).then((res) => {
             const response = new Response(res);
             if (jsonResponse) {
@@ -203,7 +203,7 @@ class Client {
                     response.data = JSON.parse(response.data);
                 }
                 catch (e) {
-                    if (response.ok && response.data === '') {
+                    if (response.ok && response.data === "") {
                         response.data = {};
                     }
                     else if (response.ok) {
@@ -232,9 +232,9 @@ class Client {
      */
     async get(url, options) {
         return this.request({
-            method: 'GET',
+            method: "GET",
             url,
-            ...options
+            ...options,
         });
     }
     /**
@@ -255,10 +255,10 @@ class Client {
      */
     async post(url, body, options) {
         return this.request({
-            method: 'POST',
+            method: "POST",
             url,
             body,
-            ...options
+            ...options,
         });
     }
     /**
@@ -280,10 +280,10 @@ class Client {
      */
     async put(url, body, options) {
         return this.request({
-            method: 'PUT',
+            method: "PUT",
             url,
             body,
-            ...options
+            ...options,
         });
     }
     /**
@@ -299,9 +299,9 @@ class Client {
      */
     async patch(url, options) {
         return this.request({
-            method: 'PATCH',
+            method: "PATCH",
             url,
-            ...options
+            ...options,
         });
     }
     /**
@@ -315,9 +315,9 @@ class Client {
      */
     async delete(url, options) {
         return this.request({
-            method: 'DELETE',
+            method: "DELETE",
             url,
-            ...options
+            ...options,
         });
     }
 }
@@ -336,8 +336,8 @@ class Client {
  * @since 1.0.0
  */
 async function getClient(options) {
-    return invoke('plugin:http|create_client', {
-        options
+    return invoke("plugin:http|create_client", {
+        options,
     }).then((id) => new Client(id));
 }
 /** @internal */
@@ -360,8 +360,8 @@ async function fetch(url, options) {
     }
     return defaultClient.request({
         url,
-        method: (_a = options === null || options === void 0 ? void 0 : options.method) !== null && _a !== void 0 ? _a : 'GET',
-        ...options
+        method: (_a = options === null || options === void 0 ? void 0 : options.method) !== null && _a !== void 0 ? _a : "GET",
+        ...options,
     });
 }
 

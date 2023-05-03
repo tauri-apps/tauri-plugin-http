@@ -119,7 +119,7 @@ declare class Body {
     static bytes(bytes: Iterable<number> | ArrayLike<number> | ArrayBuffer): Body;
 }
 /** The request HTTP verb. */
-type HttpVerb = 'GET' | 'POST' | 'PUT' | 'DELETE' | 'PATCH' | 'HEAD' | 'OPTIONS' | 'CONNECT' | 'TRACE';
+type HttpVerb = "GET" | "POST" | "PUT" | "DELETE" | "PATCH" | "HEAD" | "OPTIONS" | "CONNECT" | "TRACE";
 /**
  * Options object sent to the backend.
  *
@@ -135,9 +135,9 @@ interface HttpOptions {
     responseType?: ResponseType;
 }
 /** Request options. */
-type RequestOptions = Omit<HttpOptions, 'method' | 'url'>;
+type RequestOptions = Omit<HttpOptions, "method" | "url">;
 /** Options for the `fetch` API. */
-type FetchOptions = Omit<HttpOptions, 'url'>;
+type FetchOptions = Omit<HttpOptions, "url">;
 /** @ignore */
 interface IResponse<T> {
     url: string;
@@ -296,5 +296,5 @@ declare function getClient(options?: ClientOptions): Promise<Client>;
  * ```
  */
 declare function fetch<T>(url: string, options?: FetchOptions): Promise<Response<T>>;
-export type { Duration, ClientOptions, Part, HttpVerb, HttpOptions, RequestOptions, FetchOptions };
-export { getClient, fetch, Body, Client, Response, ResponseType, type FilePart };
+export type { Duration, ClientOptions, Part, HttpVerb, HttpOptions, RequestOptions, FetchOptions, };
+export { getClient, fetch, Body, Client, Response, ResponseType, type FilePart, };
