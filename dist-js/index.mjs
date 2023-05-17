@@ -26,12 +26,12 @@ class Body {
      * and the value is either a string or a file object.
      *
      * By default it sets the `application/x-www-form-urlencoded` Content-Type header,
-     * but you can set it to `multipart/form-data` if the Cargo feature `http-multipart` is enabled.
+     * but you can set it to `multipart/form-data` if the Cargo feature `multipart` is enabled.
      *
      * Note that a file path must be allowed in the `fs` allowlist scope.
      * @example
      * ```typescript
-     * import { Body } from "tauri-plugin-http-api"
+     * import { Body } from "@tauri-apps/plugin-http"
      * const body = Body.form({
      *   key: 'value',
      *   image: {
@@ -91,7 +91,7 @@ class Body {
      * Creates a new JSON body.
      * @example
      * ```typescript
-     * import { Body } from "tauri-plugin-http-api"
+     * import { Body } from "@tauri-apps/plugin-http"
      * Body.json({
      *   registered: true,
      *   name: 'tauri'
@@ -109,7 +109,7 @@ class Body {
      * Creates a new UTF-8 string body.
      * @example
      * ```typescript
-     * import { Body } from "tauri-plugin-http-api"
+     * import { Body } from "@tauri-apps/plugin-http"
      * Body.text('The body content as a string');
      * ```
      *
@@ -124,7 +124,7 @@ class Body {
      * Creates a new byte array body.
      * @example
      * ```typescript
-     * import { Body } from "tauri-plugin-http-api"
+     * import { Body } from "@tauri-apps/plugin-http"
      * Body.bytes(new Uint8Array([1, 2, 3]));
      * ```
      *
@@ -165,7 +165,7 @@ class Client {
      * Drops the client instance.
      * @example
      * ```typescript
-     * import { getClient } from 'tauri-plugin-http-api';
+     * import { getClient } from '@tauri-apps/plugin-http';
      * const client = await getClient();
      * await client.drop();
      * ```
@@ -179,7 +179,7 @@ class Client {
      * Makes an HTTP request.
      * @example
      * ```typescript
-     * import { getClient } from 'tauri-plugin-http-api';
+     * import { getClient } from '@tauri-apps/plugin-http';
      * const client = await getClient();
      * const response = await client.request({
      *   method: 'GET',
@@ -221,7 +221,7 @@ class Client {
      * Makes a GET request.
      * @example
      * ```typescript
-     * import { getClient, ResponseType } from 'tauri-plugin-http-api';
+     * import { getClient, ResponseType } from '@tauri-apps/plugin-http';
      * const client = await getClient();
      * const response = await client.get('http://localhost:3003/users', {
      *   timeout: 30,
@@ -241,7 +241,7 @@ class Client {
      * Makes a POST request.
      * @example
      * ```typescript
-     * import { getClient, Body, ResponseType } from 'tauri-plugin-http-api';
+     * import { getClient, Body, ResponseType } from '@tauri-apps/plugin-http';
      * const client = await getClient();
      * const response = await client.post('http://localhost:3003/users', {
      *   body: Body.json({
@@ -265,7 +265,7 @@ class Client {
      * Makes a PUT request.
      * @example
      * ```typescript
-     * import { getClient, Body } from 'tauri-plugin-http-api';
+     * import { getClient, Body } from '@tauri-apps/plugin-http';
      * const client = await getClient();
      * const response = await client.put('http://localhost:3003/users/1', {
      *   body: Body.form({
@@ -290,7 +290,7 @@ class Client {
      * Makes a PATCH request.
      * @example
      * ```typescript
-     * import { getClient, Body } from 'tauri-plugin-http-api';
+     * import { getClient, Body } from '@tauri-apps/plugin-http';
      * const client = await getClient();
      * const response = await client.patch('http://localhost:3003/users/1', {
      *   body: Body.json({ email: 'contact@tauri.app' })
@@ -308,7 +308,7 @@ class Client {
      * Makes a DELETE request.
      * @example
      * ```typescript
-     * import { getClient } from 'tauri-plugin-http-api';
+     * import { getClient } from '@tauri-apps/plugin-http';
      * const client = await getClient();
      * const response = await client.delete('http://localhost:3003/users/1');
      * ```
@@ -325,7 +325,7 @@ class Client {
  * Creates a new client using the specified options.
  * @example
  * ```typescript
- * import { getClient } from 'tauri-plugin-http-api';
+ * import { getClient } from '@tauri-apps/plugin-http';
  * const client = await getClient();
  * ```
  *
@@ -346,7 +346,7 @@ let defaultClient = null;
  * Perform an HTTP request using the default client.
  * @example
  * ```typescript
- * import { fetch } from 'tauri-plugin-http-api';
+ * import { fetch } from '@tauri-apps/plugin-http';
  * const response = await fetch('http://localhost:3003/users/2', {
  *   method: 'GET',
  *   timeout: 30,
