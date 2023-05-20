@@ -28,7 +28,7 @@ class Body {
      * By default it sets the `application/x-www-form-urlencoded` Content-Type header,
      * but you can set it to `multipart/form-data` if the Cargo feature `multipart` is enabled.
      *
-     * Note that a file path must be allowed in the `fs` allowlist scope.
+     * Note that a file path must be allowed in the `fs` scope.
      * @example
      * ```typescript
      * import { Body } from "@tauri-apps/plugin-http"
