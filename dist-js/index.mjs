@@ -1,6 +1,6 @@
-import { invoke } from '@tauri-apps/api/tauri';
-
 // Copyright 2019-2023 Tauri Programme within The Commons Conservancy
+// SPDX-License-Identifier: Apache-2.0
+// SPDX-License-Identifier: MIT
 /**
  * @since 1.0.0
  */
@@ -171,7 +171,7 @@ class Client {
      * ```
      */
     async drop() {
-        return invoke("plugin:http|drop_client", {
+        return window.__TAURI_INVOKE__("plugin:http|drop_client", {
             client: this.id,
         });
     }
@@ -192,10 +192,12 @@ class Client {
         if (jsonResponse) {
             options.responseType = ResponseType.Text;
         }
-        return invoke("plugin:http|request", {
+        return window
+            .__TAURI_INVOKE__("plugin:http|request", {
             clientId: this.id,
             options,
-        }).then((res) => {
+        })
+            .then((res) => {
             const response = new Response(res);
             if (jsonResponse) {
                 /* eslint-disable */
@@ -336,9 +338,11 @@ class Client {
  * @since 1.0.0
  */
 async function getClient(options) {
-    return invoke("plugin:http|create_client", {
+    return window
+        .__TAURI_INVOKE__("plugin:http|create_client", {
         options,
-    }).then((id) => new Client(id));
+    })
+        .then((id) => new Client(id));
 }
 /** @internal */
 let defaultClient = null;
