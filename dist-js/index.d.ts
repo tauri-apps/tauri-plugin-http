@@ -25,14 +25,14 @@ declare global {
     }
 }
 /**
- * @since 1.0.0
+ * @since 2.0.0
  */
 interface Duration {
     secs: number;
     nanos: number;
 }
 /**
- * @since 1.0.0
+ * @since 2.0.0
  */
 interface ClientOptions {
     /**
@@ -43,7 +43,7 @@ interface ClientOptions {
     connectTimeout?: number | Duration;
 }
 /**
- * @since 1.0.0
+ * @since 2.0.0
  */
 declare enum ResponseType {
     JSON = 1,
@@ -51,7 +51,7 @@ declare enum ResponseType {
     Binary = 3
 }
 /**
- * @since 1.0.0
+ * @since 2.0.0
  */
 interface FilePart<T> {
     file: string | T;
@@ -62,7 +62,7 @@ type Part = string | Uint8Array | FilePart<Uint8Array>;
 /**
  * The body object to be used on POST and PUT requests.
  *
- * @since 1.0.0
+ * @since 2.0.0
  */
 declare class Body {
     type: string;
@@ -99,6 +99,8 @@ declare class Body {
      * @param data The body data.
      *
      * @returns The body object ready to be used on the POST and PUT requests.
+     *
+     * @since 2.0.0
      */
     static form(data: Record<string, Part> | FormData): Body;
     /**
@@ -115,6 +117,8 @@ declare class Body {
      * @param data The body JSON object.
      *
      * @returns The body object ready to be used on the POST and PUT requests.
+     *
+     * @since 2.0.0
      */
     static json<K extends string | number | symbol, V>(data: Record<K, V>): Body;
     /**
@@ -128,6 +132,8 @@ declare class Body {
      * @param value The body string.
      *
      * @returns The body object ready to be used on the POST and PUT requests.
+     *
+     * @since 2.0.0
      */
     static text(value: string): Body;
     /**
@@ -141,6 +147,8 @@ declare class Body {
      * @param bytes The body byte array.
      *
      * @returns The body object ready to be used on the POST and PUT requests.
+     *
+     * @since 2.0.0
      */
     static bytes(bytes: Iterable<number> | ArrayLike<number> | ArrayBuffer): Body;
 }
@@ -149,7 +157,7 @@ type HttpVerb = "GET" | "POST" | "PUT" | "DELETE" | "PATCH" | "HEAD" | "OPTIONS"
 /**
  * Options object sent to the backend.
  *
- * @since 1.0.0
+ * @since 2.0.0
  */
 interface HttpOptions {
     method: HttpVerb;
@@ -175,7 +183,7 @@ interface IResponse<T> {
 /**
  * Response object.
  *
- * @since 1.0.0
+ * @since 2.0.0
  * */
 declare class Response<T> {
     /** The request URL. */
@@ -194,7 +202,7 @@ declare class Response<T> {
     constructor(response: IResponse<T>);
 }
 /**
- * @since 1.0.0
+ * @since 2.0.0
  */
 declare class Client {
     id: number;
@@ -307,7 +315,7 @@ declare class Client {
  *
  * @returns A promise resolving to the client instance.
  *
- * @since 1.0.0
+ * @since 2.0.0
  */
 declare function getClient(options?: ClientOptions): Promise<Client>;
 /**

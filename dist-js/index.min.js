@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 // SPDX-License-Identifier: MIT
 /**
- * @since 1.0.0
+ * @since 2.0.0
  */
 var ResponseType;
 (function (ResponseType) {
@@ -13,7 +13,7 @@ var ResponseType;
 /**
  * The body object to be used on POST and PUT requests.
  *
- * @since 1.0.0
+ * @since 2.0.0
  */
 class Body {
     /** @ignore */
@@ -51,6 +51,8 @@ class Body {
      * @param data The body data.
      *
      * @returns The body object ready to be used on the POST and PUT requests.
+     *
+     * @since 2.0.0
      */
     static form(data) {
         const form = {};
@@ -101,6 +103,8 @@ class Body {
      * @param data The body JSON object.
      *
      * @returns The body object ready to be used on the POST and PUT requests.
+     *
+     * @since 2.0.0
      */
     static json(data) {
         return new Body("Json", data);
@@ -116,6 +120,8 @@ class Body {
      * @param value The body string.
      *
      * @returns The body object ready to be used on the POST and PUT requests.
+     *
+     * @since 2.0.0
      */
     static text(value) {
         return new Body("Text", value);
@@ -131,6 +137,8 @@ class Body {
      * @param bytes The body byte array.
      *
      * @returns The body object ready to be used on the POST and PUT requests.
+     *
+     * @since 2.0.0
      */
     static bytes(bytes) {
         // stringifying Uint8Array doesn't return an array of numbers, so we create one here
@@ -140,7 +148,7 @@ class Body {
 /**
  * Response object.
  *
- * @since 1.0.0
+ * @since 2.0.0
  * */
 class Response {
     /** @ignore */
@@ -154,7 +162,7 @@ class Response {
     }
 }
 /**
- * @since 1.0.0
+ * @since 2.0.0
  */
 class Client {
     /** @ignore */
@@ -335,7 +343,7 @@ class Client {
  *
  * @returns A promise resolving to the client instance.
  *
- * @since 1.0.0
+ * @since 2.0.0
  */
 async function getClient(options) {
     return window
