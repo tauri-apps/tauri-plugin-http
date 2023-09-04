@@ -27,7 +27,6 @@ async function fetch(input, init) {
     const buffer = await req.arrayBuffer();
     const reqData = buffer.byteLength ? Array.from(new Uint8Array(buffer)) : null;
     const rid = await window.__TAURI_INVOKE__("plugin:http|fetch", {
-        cmd: "fetch",
         method: req.method,
         url: req.url,
         headers: Array.from(req.headers.entries()),
@@ -46,7 +45,7 @@ async function fetch(input, init) {
     const body = await window.__TAURI_INVOKE__("plugin:http|fetch_read_body", {
         rid,
     });
-    const res = new Response(Uint8Array.from(body), {
+    const res = new Response(new Uint8Array(body), {
         headers,
         status,
         statusText,
