@@ -1,30 +1,4 @@
 /**
- * Make HTTP requests with the Rust backend.
- *
- * ## Security
- *
- * This API has a scope configuration that forces you to restrict the URLs and paths that can be accessed using glob patterns.
- *
- * For instance, this scope configuration only allows making HTTP requests to the GitHub API for the `tauri-apps` organization:
- * ```json
- * {
- *   "plugins": {
- *     "http": {
- *       "scope": ["https://api.github.com/repos/tauri-apps/*"]
- *     }
- *   }
- * }
- * ```
- * Trying to execute any API with a URL not configured on the scope results in a promise rejection due to denied access.
- *
- * @module
- */
-declare global {
-    interface Window {
-        __TAURI_INVOKE__: <T>(cmd: string, args?: unknown) => Promise<T>;
-    }
-}
-/**
  * Options to configure the Rust client used to make fetch requests
  *
  * @since 2.0.0
