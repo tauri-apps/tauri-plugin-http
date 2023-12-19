@@ -1,6 +1,6 @@
 'use strict';
 
-var primitives = require('@tauri-apps/api/primitives');
+var core = require('@tauri-apps/api/core');
 
 // Copyright 2019-2023 Tauri Programme within The Commons Conservancy
 // SPDX-License-Identifier: Apache-2.0
@@ -51,7 +51,7 @@ async function fetch(input, init) {
     const req = new Request(input, init);
     const buffer = await req.arrayBuffer();
     const reqData = buffer.byteLength ? Array.from(new Uint8Array(buffer)) : null;
-    const rid = await primitives.invoke("plugin:http|fetch", {
+    const rid = await core.invoke("plugin:http|fetch", {
         method: req.method,
         url: req.url,
         headers: Array.from(req.headers.entries()),
@@ -60,14 +60,14 @@ async function fetch(input, init) {
         connectTimeout,
     });
     req.signal.addEventListener("abort", () => {
-        primitives.invoke("plugin:http|fetch_cancel", {
+        core.invoke("plugin:http|fetch_cancel", {
             rid,
         });
     });
-    const { status, statusText, url, headers } = await primitives.invoke("plugin:http|fetch_send", {
+    const { status, statusText, url, headers } = await core.invoke("plugin:http|fetch_send", {
         rid,
     });
-    const body = await primitives.invoke("plugin:http|fetch_read_body", {
+    const body = await core.invoke("plugin:http|fetch_read_body", {
         rid,
     });
     const res = new Response(new Uint8Array(body), {
