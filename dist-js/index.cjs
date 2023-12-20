@@ -43,21 +43,26 @@ var core = require('@tauri-apps/api/core');
 async function fetch(input, init) {
     const maxRedirections = init?.maxRedirections;
     const connectTimeout = init?.maxRedirections;
+    const proxy = init?.proxy;
     // Remove these fields before creating the request
     if (init) {
         delete init.maxRedirections;
         delete init.connectTimeout;
+        delete init.proxy;
     }
     const req = new Request(input, init);
     const buffer = await req.arrayBuffer();
     const reqData = buffer.byteLength ? Array.from(new Uint8Array(buffer)) : null;
     const rid = await core.invoke("plugin:http|fetch", {
-        method: req.method,
-        url: req.url,
-        headers: Array.from(req.headers.entries()),
-        data: reqData,
-        maxRedirections,
-        connectTimeout,
+        clientConfig: {
+            method: req.method,
+            url: req.url,
+            headers: Array.from(req.headers.entries()),
+            data: reqData,
+            maxRedirections,
+            connectTimeout,
+            proxy,
+        },
     });
     req.signal.addEventListener("abort", () => {
         core.invoke("plugin:http|fetch_cancel", {
