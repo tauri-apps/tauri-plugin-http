@@ -40,7 +40,7 @@ import { invoke } from '@tauri-apps/api/core';
  */
 async function fetch(input, init) {
     const maxRedirections = init?.maxRedirections;
-    const connectTimeout = init?.maxRedirections;
+    const connectTimeout = init?.connectTimeout;
     const proxy = init?.proxy;
     // Remove these fields before creating the request
     if (init) {
