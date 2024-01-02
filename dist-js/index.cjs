@@ -50,6 +50,7 @@ async function fetch(input, init) {
         delete init.connectTimeout;
         delete init.proxy;
     }
+    const signal = init?.signal;
     const req = new Request(input, init);
     const buffer = await req.arrayBuffer();
     const reqData = buffer.byteLength ? Array.from(new Uint8Array(buffer)) : null;
@@ -64,16 +65,16 @@ async function fetch(input, init) {
             proxy,
         },
     });
-    req.signal.addEventListener("abort", () => {
+    signal?.addEventListener("abort", () => {
         core.invoke("plugin:http|fetch_cancel", {
             rid,
         });
     });
-    const { status, statusText, url, headers } = await core.invoke("plugin:http|fetch_send", {
+    const { status, statusText, url, headers, rid: responseRid, } = await core.invoke("plugin:http|fetch_send", {
         rid,
     });
     const body = await core.invoke("plugin:http|fetch_read_body", {
-        rid,
+        rid: responseRid,
     });
     const res = new Response(new Uint8Array(body), {
         headers,
