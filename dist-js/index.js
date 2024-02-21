@@ -74,7 +74,11 @@ async function fetch(input, init) {
     const body = await invoke("plugin:http|fetch_read_body", {
         rid: responseRid,
     });
-    const res = new Response(new Uint8Array(body), {
+    const res = new Response(body instanceof ArrayBuffer && body.byteLength
+        ? body
+        : body instanceof Array && body.length
+            ? new Uint8Array(body)
+            : null, {
         headers,
         status,
         statusText,
