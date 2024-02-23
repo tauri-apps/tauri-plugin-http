@@ -51,6 +51,19 @@ async function fetch(input, init) {
         delete init.proxy;
     }
     const signal = init?.signal;
+    const headers = !init?.headers
+        ? []
+        : init.headers instanceof Headers
+            ? Array.from(init.headers.entries())
+            : Array.isArray(init.headers)
+                ? init.headers
+                : Object.entries(init.headers);
+    const mappedHeaders = headers.map(([name, val]) => [
+        name,
+        // we need to ensure we have all values as strings
+        // eslint-disable-next-line
+        typeof val === "string" ? val : val.toString(),
+    ]);
     const req = new Request(input, init);
     const buffer = await req.arrayBuffer();
     const reqData = buffer.byteLength ? Array.from(new Uint8Array(buffer)) : null;
@@ -58,7 +71,7 @@ async function fetch(input, init) {
         clientConfig: {
             method: req.method,
             url: req.url,
-            headers: Array.from(req.headers.entries()),
+            headers: mappedHeaders,
             data: reqData,
             maxRedirections,
             connectTimeout,
@@ -70,7 +83,7 @@ async function fetch(input, init) {
             rid,
         });
     });
-    const { status, statusText, url, headers, rid: responseRid, } = await core.invoke("plugin:http|fetch_send", {
+    const { status, statusText, url, headers: responseHeaders, rid: responseRid, } = await core.invoke("plugin:http|fetch_send", {
         rid,
     });
     const body = await core.invoke("plugin:http|fetch_read_body", {
@@ -81,7 +94,7 @@ async function fetch(input, init) {
         : body instanceof Array && body.length
             ? new Uint8Array(body)
             : null, {
-        headers,
+        headers: responseHeaders,
         status,
         statusText,
     });
