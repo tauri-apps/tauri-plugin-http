@@ -3,7 +3,7 @@
  *
  * @since 2.0.0
  */
-export type Proxy = {
+export interface Proxy {
     /**
      * Proxy all traffic to the passed URL.
      */
@@ -16,7 +16,7 @@ export type Proxy = {
      * Proxy all HTTPS traffic to the passed URL.
      */
     https?: string | ProxyConfig;
-};
+}
 export interface ProxyConfig {
     /**
      * The URL of the proxy server.
@@ -30,7 +30,7 @@ export interface ProxyConfig {
         password: string;
     };
     /**
-     * A configuration for filtering out requests that shouldn’t be proxied.
+     * A configuration for filtering out requests that shouldn't be proxied.
      * Entries are expected to be comma-separated (whitespace between entries is ignored)
      */
     noProxy?: string;

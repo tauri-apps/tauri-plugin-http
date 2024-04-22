@@ -45,13 +45,13 @@ async function fetch(input, init) {
     const connectTimeout = init?.connectTimeout;
     const proxy = init?.proxy;
     // Remove these fields before creating the request
-    if (init) {
+    if (init != null) {
         delete init.maxRedirections;
         delete init.connectTimeout;
         delete init.proxy;
     }
     const signal = init?.signal;
-    const headers = !init?.headers
+    const headers = init?.headers == null
         ? []
         : init.headers instanceof Headers
             ? Array.from(init.headers.entries())
@@ -66,7 +66,7 @@ async function fetch(input, init) {
     ]);
     const req = new Request(input, init);
     const buffer = await req.arrayBuffer();
-    const reqData = buffer.byteLength ? Array.from(new Uint8Array(buffer)) : null;
+    const reqData = buffer.byteLength !== 0 ? Array.from(new Uint8Array(buffer)) : null;
     const rid = await core.invoke("plugin:http|fetch", {
         clientConfig: {
             method: req.method,
@@ -79,7 +79,7 @@ async function fetch(input, init) {
         },
     });
     signal?.addEventListener("abort", () => {
-        core.invoke("plugin:http|fetch_cancel", {
+        void core.invoke("plugin:http|fetch_cancel", {
             rid,
         });
     });
@@ -89,9 +89,9 @@ async function fetch(input, init) {
     const body = await core.invoke("plugin:http|fetch_read_body", {
         rid: responseRid,
     });
-    const res = new Response(body instanceof ArrayBuffer && body.byteLength
+    const res = new Response(body instanceof ArrayBuffer && body.byteLength !== 0
         ? body
-        : body instanceof Array && body.length
+        : body instanceof Array && body.length > 0
             ? new Uint8Array(body)
             : null, {
         headers: responseHeaders,
