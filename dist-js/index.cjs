@@ -45,19 +45,19 @@ async function fetch(input, init) {
     const connectTimeout = init?.connectTimeout;
     const proxy = init?.proxy;
     // Remove these fields before creating the request
-    if (init != null) {
+    if (init) {
         delete init.maxRedirections;
         delete init.connectTimeout;
         delete init.proxy;
     }
     const signal = init?.signal;
-    const headers = init?.headers == null
-        ? []
-        : init.headers instanceof Headers
+    const headers = init?.headers
+        ? init.headers instanceof Headers
             ? Array.from(init.headers.entries())
             : Array.isArray(init.headers)
                 ? init.headers
-                : Object.entries(init.headers);
+                : Object.entries(init.headers)
+        : [];
     const mappedHeaders = headers.map(([name, val]) => [
         name,
         // we need to ensure we have all values as strings
