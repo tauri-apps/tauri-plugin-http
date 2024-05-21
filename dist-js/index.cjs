@@ -53,26 +53,36 @@ async function fetch(input, init) {
     const signal = init?.signal;
     const headers = init?.headers
         ? init.headers instanceof Headers
-            ? Array.from(init.headers.entries())
-            : Array.isArray(init.headers)
-                ? init.headers
-                : Object.entries(init.headers)
-        : [];
-    const mappedHeaders = headers.map(([name, val]) => [
+            ? init.headers
+            : new Headers(init.headers)
+        : new Headers();
+    const req = new Request(input, init);
+    const buffer = await req.arrayBuffer();
+    const data = buffer.byteLength !== 0 ? Array.from(new Uint8Array(buffer)) : null;
+    // append new headers created by the browser `Request` implementation,
+    // if not already declared by the caller of this function
+    for (const [key, value] of req.headers) {
+        if (!headers.get(key)) {
+            headers.set(key, value);
+        }
+    }
+    const headersArray = headers instanceof Headers
+        ? Array.from(headers.entries())
+        : Array.isArray(headers)
+            ? headers
+            : Object.entries(headers);
+    const mappedHeaders = headersArray.map(([name, val]) => [
         name,
-        // we need to ensure we have all values as strings
+        // we need to ensure we have all header values as strings
         // eslint-disable-next-line
         typeof val === "string" ? val : val.toString(),
     ]);
-    const req = new Request(input, init);
-    const buffer = await req.arrayBuffer();
-    const reqData = buffer.byteLength !== 0 ? Array.from(new Uint8Array(buffer)) : null;
     const rid = await core.invoke("plugin:http|fetch", {
         clientConfig: {
             method: req.method,
             url: req.url,
             headers: mappedHeaders,
-            data: reqData,
+            data,
             maxRedirections,
             connectTimeout,
             proxy,
