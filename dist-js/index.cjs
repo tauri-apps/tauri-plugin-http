@@ -71,6 +71,7 @@ async function fetch(input, init) {
         : Array.isArray(headers)
             ? headers
             : Object.entries(headers);
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
     const mappedHeaders = headersArray.map(([name, val]) => [
         name,
         // we need to ensure we have all header values as strings
