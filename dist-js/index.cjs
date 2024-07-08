@@ -28,6 +28,7 @@ var core = require('@tauri-apps/api/core');
  *
  * @module
  */
+const ERROR_REQUEST_CANCELLED = "Request canceled";
 /**
  * Fetch a resource from the network. It returns a `Promise` that resolves to the
  * `Response` to that `Request`, whether it is successful or not.
@@ -43,6 +44,11 @@ var core = require('@tauri-apps/api/core');
  * @since 2.0.0
  */
 async function fetch(input, init) {
+    // abort early here if needed
+    const signal = init?.signal;
+    if (signal?.aborted) {
+        throw new Error(ERROR_REQUEST_CANCELLED);
+    }
     const maxRedirections = init?.maxRedirections;
     const connectTimeout = init?.connectTimeout;
     const proxy = init?.proxy;
@@ -52,7 +58,6 @@ async function fetch(input, init) {
         delete init.connectTimeout;
         delete init.proxy;
     }
-    const signal = init?.signal;
     const headers = init?.headers
         ? init.headers instanceof Headers
             ? init.headers
@@ -80,6 +85,10 @@ async function fetch(input, init) {
         // eslint-disable-next-line
         typeof val === "string" ? val : val.toString(),
     ]);
+    // abort early here if needed
+    if (signal?.aborted) {
+        throw new Error(ERROR_REQUEST_CANCELLED);
+    }
     const rid = await core.invoke("plugin:http|fetch", {
         clientConfig: {
             method: req.method,
@@ -91,11 +100,15 @@ async function fetch(input, init) {
             proxy,
         },
     });
-    signal?.addEventListener("abort", () => {
-        void core.invoke("plugin:http|fetch_cancel", {
-            rid,
-        });
-    });
+    const abort = () => core.invoke("plugin:http|fetch_cancel", { rid });
+    // abort early here if needed
+    if (signal?.aborted) {
+        // we don't care about the result of this proimse
+        // eslint-disable-next-line @typescript-eslint/no-floating-promises
+        abort();
+        throw new Error(ERROR_REQUEST_CANCELLED);
+    }
+    signal?.addEventListener("abort", () => abort);
     const { status, statusText, url, headers: responseHeaders, rid: responseRid, } = await core.invoke("plugin:http|fetch_send", {
         rid,
     });
@@ -107,7 +120,6 @@ async function fetch(input, init) {
         : body instanceof Array && body.length > 0
             ? new Uint8Array(body)
             : null, {
-        headers: responseHeaders,
         status,
         statusText,
     });
