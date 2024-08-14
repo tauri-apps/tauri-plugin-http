@@ -106,7 +106,7 @@ async function fetch(input, init) {
         abort();
         throw new Error(ERROR_REQUEST_CANCELLED);
     }
-    signal?.addEventListener("abort", () => abort);
+    signal?.addEventListener("abort", () => void abort());
     const { status, statusText, url, headers: responseHeaders, rid: responseRid, } = await invoke("plugin:http|fetch_send", {
         rid,
     });
