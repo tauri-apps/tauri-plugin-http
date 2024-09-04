@@ -28,7 +28,7 @@ var core = require('@tauri-apps/api/core');
  *
  * @module
  */
-const ERROR_REQUEST_CANCELLED = "Request canceled";
+const ERROR_REQUEST_CANCELLED = 'Request canceled';
 /**
  * Fetch a resource from the network. It returns a `Promise` that resolves to the
  * `Response` to that `Request`, whether it is successful or not.
@@ -83,13 +83,13 @@ async function fetch(input, init) {
         name,
         // we need to ensure we have all header values as strings
         // eslint-disable-next-line
-        typeof val === "string" ? val : val.toString(),
+        typeof val === 'string' ? val : val.toString()
     ]);
     // abort early here if needed
     if (signal?.aborted) {
         throw new Error(ERROR_REQUEST_CANCELLED);
     }
-    const rid = await core.invoke("plugin:http|fetch", {
+    const rid = await core.invoke('plugin:http|fetch', {
         clientConfig: {
             method: req.method,
             url: req.url,
@@ -97,10 +97,10 @@ async function fetch(input, init) {
             data,
             maxRedirections,
             connectTimeout,
-            proxy,
-        },
+            proxy
+        }
     });
-    const abort = () => core.invoke("plugin:http|fetch_cancel", { rid });
+    const abort = () => core.invoke('plugin:http|fetch_cancel', { rid });
     // abort early here if needed
     if (signal?.aborted) {
         // we don't care about the result of this proimse
@@ -108,12 +108,12 @@ async function fetch(input, init) {
         abort();
         throw new Error(ERROR_REQUEST_CANCELLED);
     }
-    signal?.addEventListener("abort", () => void abort());
-    const { status, statusText, url, headers: responseHeaders, rid: responseRid, } = await core.invoke("plugin:http|fetch_send", {
-        rid,
+    signal?.addEventListener('abort', () => void abort());
+    const { status, statusText, url, headers: responseHeaders, rid: responseRid } = await core.invoke('plugin:http|fetch_send', {
+        rid
     });
-    const body = await core.invoke("plugin:http|fetch_read_body", {
-        rid: responseRid,
+    const body = await core.invoke('plugin:http|fetch_read_body', {
+        rid: responseRid
     });
     const res = new Response(body instanceof ArrayBuffer && body.byteLength !== 0
         ? body
@@ -121,7 +121,7 @@ async function fetch(input, init) {
             ? new Uint8Array(body)
             : null, {
         status,
-        statusText,
+        statusText
     });
     // url and headers are read only properties
     // but seems like we can set them like this
@@ -129,9 +129,9 @@ async function fetch(input, init) {
     // we define theme like this, because using `Response`
     // constructor, it removes url and some headers
     // like `set-cookie` headers
-    Object.defineProperty(res, "url", { value: url });
-    Object.defineProperty(res, "headers", {
-        value: new Headers(responseHeaders),
+    Object.defineProperty(res, 'url', { value: url });
+    Object.defineProperty(res, 'headers', {
+        value: new Headers(responseHeaders)
     });
     return res;
 }
