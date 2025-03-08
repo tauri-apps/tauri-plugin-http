@@ -26,7 +26,7 @@
  * @module
  */
 
-import { invoke } from '@tauri-apps/api/core'
+import { Channel, invoke } from '@tauri-apps/api/core'
 
 /**
  * Configuration of a proxy that a Client should pass requests to.
@@ -186,6 +186,35 @@ export async function fetch(
     throw new Error(ERROR_REQUEST_CANCELLED)
   }
 
+  const streamChannel = new Channel<ArrayBuffer | number[]>()
+
+  const readableStreamBody = new ReadableStream({
+    start: (controller) => {
+      streamChannel.onmessage = (res: ArrayBuffer | number[]) => {
+        // close early if aborted
+        if (signal?.aborted) {
+          controller.error(ERROR_REQUEST_CANCELLED)
+          controller.close()
+          return
+        }
+
+        // close when the signal to close (an empty chunk)
+        // is sent from the IPC.
+        if (
+          res instanceof ArrayBuffer ? res.byteLength == 0 : res.length == 0
+        ) {
+          controller.close()
+          return
+        }
+
+        // the content conversion (like .text(), .json(), etc.) in Response
+        // must have Uint8Array as its content, else it will
+        // have untraceable error that's hard to debug.
+        controller.enqueue(new Uint8Array(res))
+      }
+    }
+  })
+
   const rid = await invoke<number>('plugin:http|fetch', {
     clientConfig: {
       method: req.method,
@@ -196,7 +225,8 @@ export async function fetch(
       connectTimeout,
       proxy,
       danger
-    }
+    },
+    streamChannel
   })
 
   const abort = () => invoke('plugin:http|fetch_cancel', { rid })
@@ -223,30 +253,15 @@ export async function fetch(
     status,
     statusText,
     url,
-    headers: responseHeaders,
-    rid: responseRid
+    headers: responseHeaders
   } = await invoke<FetchSendResponse>('plugin:http|fetch_send', {
     rid
   })
 
-  const body = await invoke<ArrayBuffer | number[]>(
-    'plugin:http|fetch_read_body',
-    {
-      rid: responseRid
-    }
-  )
-
-  const res = new Response(
-    body instanceof ArrayBuffer && body.byteLength !== 0
-      ? body
-      : body instanceof Array && body.length > 0
-        ? new Uint8Array(body)
-        : null,
-    {
-      status,
-      statusText
-    }
-  )
+  const res = new Response(readableStreamBody, {
+    status,
+    statusText
+  })
 
   // url and headers are read only properties
   // but seems like we can set them like this

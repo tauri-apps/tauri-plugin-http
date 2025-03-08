@@ -10,7 +10,7 @@ use serde::{Deserialize, Serialize};
 use tauri::{
     async_runtime::Mutex,
     command,
-    ipc::{CommandScope, GlobalScope},
+    ipc::{Channel, CommandScope, GlobalScope},
     Manager, ResourceId, ResourceTable, Runtime, State, Webview,
 };
 use tokio::sync::oneshot::{channel, Receiver, Sender};
@@ -21,9 +21,6 @@ use crate::{
 };
 
 const HTTP_USER_AGENT: &str = concat!(env!("CARGO_PKG_NAME"), "/", env!("CARGO_PKG_VERSION"),);
-
-struct ReqwestResponse(reqwest::Response);
-impl tauri::Resource for ReqwestResponse {}
 
 type CancelableResponseResult = Result<reqwest::Response>;
 type CancelableResponseFuture =
@@ -181,6 +178,7 @@ pub async fn fetch<R: Runtime>(
     client_config: ClientConfig,
     command_scope: CommandScope<Entry>,
     global_scope: GlobalScope<Entry>,
+    stream_channel: Channel<tauri::ipc::InvokeResponseBody>,
 ) -> crate::Result<ResourceId> {
     let ClientConfig {
         method,
@@ -314,7 +312,21 @@ pub async fn fetch<R: Runtime>(
                 #[cfg(feature = "tracing")]
                 tracing::trace!("{:?}", request);
 
-                let fut = async move { request.send().await.map_err(Into::into) };
+                let fut = async move {
+                    let mut res = request.send().await?;
+
+                    // send response through IPC channel
+                    while let Some(chunk) = res.chunk().await? {
+                        stream_channel.send(tauri::ipc::InvokeResponseBody::Raw(chunk.to_vec()))?;
+                    }
+
+                    // send empty vector when done
+                    stream_channel.send(tauri::ipc::InvokeResponseBody::Raw(Vec::new()))?;
+
+                    // return that response
+                    Ok(res)
+                };
+
                 let mut resources_table = webview.resources_table();
                 let rid = resources_table.add_request(Box::pin(fut));
 
@@ -398,9 +410,6 @@ pub async fn fetch_send<R: Runtime>(
         ));
     }
 
-    let mut resources_table = webview.resources_table();
-    let rid = resources_table.add(ReqwestResponse(res));
-
     Ok(FetchResponse {
         status: status.as_u16(),
         status_text: status.canonical_reason().unwrap_or_default().to_string(),
@@ -408,19 +417,6 @@ pub async fn fetch_send<R: Runtime>(
         url,
         rid,
     })
-}
-
-#[tauri::command]
-pub(crate) async fn fetch_read_body<R: Runtime>(
-    webview: Webview<R>,
-    rid: ResourceId,
-) -> crate::Result<tauri::ipc::Response> {
-    let res = {
-        let mut resources_table = webview.resources_table();
-        resources_table.take::<ReqwestResponse>(rid)?
-    };
-    let res = Arc::into_inner(res).unwrap().0;
-    Ok(tauri::ipc::Response::new(res.bytes().await?.to_vec()))
 }
 
 // forbidden headers per fetch spec https://fetch.spec.whatwg.org/#terminology-headers

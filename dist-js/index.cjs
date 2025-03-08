@@ -91,6 +91,29 @@ async function fetch(input, init) {
     if (signal?.aborted) {
         throw new Error(ERROR_REQUEST_CANCELLED);
     }
+    const streamChannel = new core.Channel();
+    const readableStreamBody = new ReadableStream({
+        start: (controller) => {
+            streamChannel.onmessage = (res) => {
+                // close early if aborted
+                if (signal?.aborted) {
+                    controller.error(ERROR_REQUEST_CANCELLED);
+                    controller.close();
+                    return;
+                }
+                // close when the signal to close (an empty chunk)
+                // is sent from the IPC.
+                if (res instanceof ArrayBuffer ? res.byteLength == 0 : res.length == 0) {
+                    controller.close();
+                    return;
+                }
+                // the content conversion (like .text(), .json(), etc.) in Response
+                // must have Uint8Array as its content, else it will
+                // have untraceable error that's hard to debug.
+                controller.enqueue(new Uint8Array(res));
+            };
+        }
+    });
     const rid = await core.invoke('plugin:http|fetch', {
         clientConfig: {
             method: req.method,
@@ -101,7 +124,8 @@ async function fetch(input, init) {
             connectTimeout,
             proxy,
             danger
-        }
+        },
+        streamChannel
     });
     const abort = () => core.invoke('plugin:http|fetch_cancel', { rid });
     // abort early here if needed
@@ -112,17 +136,10 @@ async function fetch(input, init) {
         throw new Error(ERROR_REQUEST_CANCELLED);
     }
     signal?.addEventListener('abort', () => void abort());
-    const { status, statusText, url, headers: responseHeaders, rid: responseRid } = await core.invoke('plugin:http|fetch_send', {
+    const { status, statusText, url, headers: responseHeaders } = await core.invoke('plugin:http|fetch_send', {
         rid
     });
-    const body = await core.invoke('plugin:http|fetch_read_body', {
-        rid: responseRid
-    });
-    const res = new Response(body instanceof ArrayBuffer && body.byteLength !== 0
-        ? body
-        : body instanceof Array && body.length > 0
-            ? new Uint8Array(body)
-            : null, {
+    const res = new Response(readableStreamBody, {
         status,
         statusText
     });
