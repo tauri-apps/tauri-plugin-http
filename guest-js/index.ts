@@ -106,7 +106,7 @@ export interface DangerousSettings {
   acceptInvalidHostnames?: boolean
 }
 
-const ERROR_REQUEST_CANCELLED = 'Request canceled'
+const ERROR_REQUEST_CANCELLED = 'Request cancelled'
 
 /**
  * Fetch a resource from the network. It returns a `Promise` that resolves to the
@@ -186,35 +186,6 @@ export async function fetch(
     throw new Error(ERROR_REQUEST_CANCELLED)
   }
 
-  const streamChannel = new Channel<ArrayBuffer | number[]>()
-
-  const readableStreamBody = new ReadableStream({
-    start: (controller) => {
-      streamChannel.onmessage = (res: ArrayBuffer | number[]) => {
-        // close early if aborted
-        if (signal?.aborted) {
-          controller.error(ERROR_REQUEST_CANCELLED)
-          controller.close()
-          return
-        }
-
-        // close when the signal to close (an empty chunk)
-        // is sent from the IPC.
-        if (
-          res instanceof ArrayBuffer ? res.byteLength == 0 : res.length == 0
-        ) {
-          controller.close()
-          return
-        }
-
-        // the content conversion (like .text(), .json(), etc.) in Response
-        // must have Uint8Array as its content, else it will
-        // have untraceable error that's hard to debug.
-        controller.enqueue(new Uint8Array(res))
-      }
-    }
-  })
-
   const rid = await invoke<number>('plugin:http|fetch', {
     clientConfig: {
       method: req.method,
@@ -225,8 +196,7 @@ export async function fetch(
       connectTimeout,
       proxy,
       danger
-    },
-    streamChannel
+    }
   })
 
   const abort = () => invoke('plugin:http|fetch_cancel', { rid })
@@ -253,9 +223,45 @@ export async function fetch(
     status,
     statusText,
     url,
-    headers: responseHeaders
+    headers: responseHeaders,
+    rid: responseRid
   } = await invoke<FetchSendResponse>('plugin:http|fetch_send', {
     rid
+  })
+
+  const readableStreamBody = new ReadableStream({
+    start: (controller) => {
+      const streamChannel = new Channel<ArrayBuffer | number[]>()
+      streamChannel.onmessage = (res: ArrayBuffer | number[]) => {
+        // close early if aborted
+        if (signal?.aborted) {
+          controller.error(ERROR_REQUEST_CANCELLED)
+          return
+        }
+
+        // close when the signal to close (an empty chunk)
+        // is sent from the IPC.
+        if (
+          res instanceof ArrayBuffer ? res.byteLength == 0 : res.length == 0
+        ) {
+          controller.close()
+          return
+        }
+
+        // the content conversion (like .text(), .json(), etc.) in Response
+        // must have Uint8Array as its content, else it will
+        // have untraceable error that's hard to debug.
+        controller.enqueue(new Uint8Array(res))
+      }
+
+      // run a non-blocking body stream fetch
+      invoke('plugin:http|fetch_read_body', {
+        rid: responseRid,
+        streamChannel
+      }).catch((e) => {
+        controller.error(e)
+      })
+    }
   })
 
   const res = new Response(readableStreamBody, {

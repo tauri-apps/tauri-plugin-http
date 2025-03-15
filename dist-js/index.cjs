@@ -28,7 +28,7 @@ var core = require('@tauri-apps/api/core');
  *
  * @module
  */
-const ERROR_REQUEST_CANCELLED = 'Request canceled';
+const ERROR_REQUEST_CANCELLED = 'Request cancelled';
 /**
  * Fetch a resource from the network. It returns a `Promise` that resolves to the
  * `Response` to that `Request`, whether it is successful or not.
@@ -91,14 +91,37 @@ async function fetch(input, init) {
     if (signal?.aborted) {
         throw new Error(ERROR_REQUEST_CANCELLED);
     }
-    const streamChannel = new core.Channel();
+    const rid = await core.invoke('plugin:http|fetch', {
+        clientConfig: {
+            method: req.method,
+            url: req.url,
+            headers: mappedHeaders,
+            data,
+            maxRedirections,
+            connectTimeout,
+            proxy,
+            danger
+        }
+    });
+    const abort = () => core.invoke('plugin:http|fetch_cancel', { rid });
+    // abort early here if needed
+    if (signal?.aborted) {
+        // we don't care about the result of this proimse
+        // eslint-disable-next-line @typescript-eslint/no-floating-promises
+        abort();
+        throw new Error(ERROR_REQUEST_CANCELLED);
+    }
+    signal?.addEventListener('abort', () => void abort());
+    const { status, statusText, url, headers: responseHeaders, rid: responseRid } = await core.invoke('plugin:http|fetch_send', {
+        rid
+    });
     const readableStreamBody = new ReadableStream({
         start: (controller) => {
+            const streamChannel = new core.Channel();
             streamChannel.onmessage = (res) => {
                 // close early if aborted
                 if (signal?.aborted) {
                     controller.error(ERROR_REQUEST_CANCELLED);
-                    controller.close();
                     return;
                 }
                 // close when the signal to close (an empty chunk)
@@ -112,32 +135,14 @@ async function fetch(input, init) {
                 // have untraceable error that's hard to debug.
                 controller.enqueue(new Uint8Array(res));
             };
+            // run a non-blocking body stream fetch
+            core.invoke('plugin:http|fetch_read_body', {
+                rid: responseRid,
+                streamChannel
+            }).catch((e) => {
+                controller.error(e);
+            });
         }
-    });
-    const rid = await core.invoke('plugin:http|fetch', {
-        clientConfig: {
-            method: req.method,
-            url: req.url,
-            headers: mappedHeaders,
-            data,
-            maxRedirections,
-            connectTimeout,
-            proxy,
-            danger
-        },
-        streamChannel
-    });
-    const abort = () => core.invoke('plugin:http|fetch_cancel', { rid });
-    // abort early here if needed
-    if (signal?.aborted) {
-        // we don't care about the result of this proimse
-        // eslint-disable-next-line @typescript-eslint/no-floating-promises
-        abort();
-        throw new Error(ERROR_REQUEST_CANCELLED);
-    }
-    signal?.addEventListener('abort', () => void abort());
-    const { status, statusText, url, headers: responseHeaders } = await core.invoke('plugin:http|fetch_send', {
-        rid
     });
     const res = new Response(readableStreamBody, {
         status,
