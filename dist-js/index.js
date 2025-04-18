@@ -141,7 +141,7 @@ async function fetch(input, init) {
             });
         }
     });
-    const res = new Response(readableStreamBody, {
+    const res = new Response(status !== 204 ? readableStreamBody : null, {
         status,
         statusText
     });
