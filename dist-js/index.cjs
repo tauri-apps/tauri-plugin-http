@@ -115,35 +115,39 @@ async function fetch(input, init) {
     const { status, statusText, url, headers: responseHeaders, rid: responseRid } = await core.invoke('plugin:http|fetch_send', {
         rid
     });
-    const readableStreamBody = new ReadableStream({
-        start: (controller) => {
-            const streamChannel = new core.Channel();
-            streamChannel.onmessage = (res) => {
-                // close early if aborted
-                if (signal?.aborted) {
-                    controller.error(ERROR_REQUEST_CANCELLED);
-                    return;
-                }
-                const resUint8 = new Uint8Array(res);
-                const lastByte = resUint8[resUint8.byteLength - 1];
-                const actualRes = resUint8.slice(0, resUint8.byteLength - 1);
-                // close when the signal to close (last byte is 1) is sent from the IPC.
-                if (lastByte == 1) {
-                    controller.close();
-                    return;
-                }
-                controller.enqueue(actualRes);
-            };
-            // run a non-blocking body stream fetch
-            core.invoke('plugin:http|fetch_read_body', {
-                rid: responseRid,
-                streamChannel
-            }).catch((e) => {
-                controller.error(e);
-            });
-        }
-    });
-    const res = new Response(status !== 204 ? readableStreamBody : null, {
+    // no body for 204, 205 and 304
+    // see https://searchfox.org/mozilla-central/source/dom/fetch/Response.cpp#258
+    const body = [204, 205, 304].includes(status)
+        ? null
+        : new ReadableStream({
+            start: (controller) => {
+                const streamChannel = new core.Channel();
+                streamChannel.onmessage = (res) => {
+                    // close early if aborted
+                    if (signal?.aborted) {
+                        controller.error(ERROR_REQUEST_CANCELLED);
+                        return;
+                    }
+                    const resUint8 = new Uint8Array(res);
+                    const lastByte = resUint8[resUint8.byteLength - 1];
+                    const actualRes = resUint8.slice(0, resUint8.byteLength - 1);
+                    // close when the signal to close (last byte is 1) is sent from the IPC.
+                    if (lastByte == 1) {
+                        controller.close();
+                        return;
+                    }
+                    controller.enqueue(actualRes);
+                };
+                // run a non-blocking body stream fetch
+                core.invoke('plugin:http|fetch_read_body', {
+                    rid: responseRid,
+                    streamChannel
+                }).catch((e) => {
+                    controller.error(e);
+                });
+            }
+        });
+    const res = new Response(body, {
         status,
         statusText
     });
