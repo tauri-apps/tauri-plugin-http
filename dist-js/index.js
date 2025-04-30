@@ -113,9 +113,9 @@ async function fetch(input, init) {
     const { status, statusText, url, headers: responseHeaders, rid: responseRid } = await invoke('plugin:http|fetch_send', {
         rid
     });
-    // no body for 204, 205 and 304
-    // see https://searchfox.org/mozilla-central/source/dom/fetch/Response.cpp#258
-    const body = [204, 205, 304].includes(status)
+    // no body for 101, 103, 204, 205 and 304
+    // see https://fetch.spec.whatwg.org/#null-body-status
+    const body = [101, 103, 204, 205, 304].includes(status)
         ? null
         : new ReadableStream({
             start: (controller) => {
