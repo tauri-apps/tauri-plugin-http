@@ -101,21 +101,24 @@ async function fetch(input, init) {
             danger
         }
     });
-    const abort = () => invoke('plugin:http|fetch_cancel', { rid });
+    const abort = () => invoke('plugin:http|fetch_cancel', { rid }).catch(() => { });
     // Optimistically check for abort signal
     // and avoid doing any work after doing intial work on the Rust side
     if (signal?.aborted) {
-        // we don't care about the result of this proimse
-        // eslint-disable-next-line @typescript-eslint/no-floating-promises
-        abort();
+        // we don't care about the result of this promise
+        void abort();
         throw new Error(ERROR_REQUEST_CANCELLED);
     }
     signal?.addEventListener('abort', () => void abort());
     const { status, statusText, url, headers: responseHeaders, rid: responseRid } = await invoke('plugin:http|fetch_send', {
         rid
     });
+    let bodyDropped = false;
     const dropBody = () => {
-        return invoke('plugin:http|fetch_cancel_body', { rid: responseRid });
+        if (bodyDropped)
+            return Promise.resolve();
+        bodyDropped = true;
+        return invoke('plugin:http|fetch_cancel_body', { rid: responseRid }).catch(() => { });
     };
     const readChunk = async (controller) => {
         let data;
