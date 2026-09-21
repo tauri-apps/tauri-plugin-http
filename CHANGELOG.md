@@ -1,5 +1,13 @@
 # Changelog
 
+## [3.0.0-alpha.1]
+
+- [`15bf611d`](https://github.com/tauri-apps/plugins-workspace/commit/15bf611d68b15f343c0e8f6834a64d0cf2cc1637) Update to @tauri-apps/api v3.0.0-alpha.
+
+### Dependencies
+
+- Upgraded to `fs-js@3.0.0-alpha.1`
+
 ## [3.0.0-alpha.0]
 
 - [`363438b5`](https://github.com/tauri-apps/plugins-workspace/commit/363438b50a09162379d57c7c7bfc132520c1e5d4) Update to tauri 3.0 alpha.
@@ -7,6 +15,28 @@
 ### Dependencies
 
 - Upgraded to `fs-js@3.0.0-alpha.0`
+
+## [2.7.0]
+
+- [`1198a524`](https://github.com/tauri-apps/plugins-workspace/commit/1198a524b710abf2abeb1d9bd7b252402d26ca6d) **Security:** Added the `scopeRedirects` plugin configuration option, which checks the URL scope on every hop of a redirect chain instead of only on the URL requested by the frontend. Without it, a server on an allowed origin can redirect the request to any other origin - including `localhost` services, internal hosts and cloud metadata endpoints - and the plugin follows it, returning the response to the webview.
+    
+    ```json
+    {
+      "plugins": {
+        "http": {
+          "scopeRedirects": true
+        }
+      }
+    }
+    ```
+    
+    It is opt-in because a redirect to a URL that is not allowed by the scope now fails with `url not allowed on the configured scope` instead of being followed, so applications that rely on being redirected outside of their scope must add the redirect target to the scope. **This will become the default in v3.**
+    
+    Note that `tauri_plugin_http::init()` now returns `TauriPlugin<R, Option<Config>>` instead of `TauriPlugin<R>`.
+
+## [2.6.1]
+
+- [`a21555dd`](https://github.com/tauri-apps/plugins-workspace/commit/a21555ddd2eaadfed23848912fe2802c2ba7579e) ([#3566](https://github.com/tauri-apps/plugins-workspace/pull/3566) by [@followdarko](https://github.com/tauri-apps/plugins-workspace/../../followdarko)) Fix unhandled promise rejections on every `fetch` teardown: the request/body cleanup commands were fired as floating promises, and releasing an already-released resource rejects with `The resource id N is invalid.`. `dropBody` is now idempotent and both cleanup calls handle their own rejection.
 
 ## [2.6.0]
 
