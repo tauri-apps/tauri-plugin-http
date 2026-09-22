@@ -31,13 +31,23 @@ const ERROR_REQUEST_CANCELLED = 'Request cancelled';
  * Fetch a resource from the network. It returns a `Promise` that resolves to the
  * `Response` to that `Request`, whether it is successful or not.
  *
+ * The request is performed by the Rust backend instead of the webview, so it is not subject to
+ * CORS, but the URL must be allowed by the plugin scope.
+ *
  * @example
  * ```typescript
+ * import { fetch } from '@tauri-apps/plugin-http';
  * const response = await fetch("http://my.json.host/data.json");
  * console.log(response.status);  // e.g. 200
  * console.log(response.statusText); // e.g. "OK"
  * const jsonData = await response.json();
  * ```
+ *
+ * @param input The resource to fetch, as a URL, a string or a `Request` object.
+ * @param init The standard `fetch` request options, extended with the Rust client options from
+ * {@linkcode ClientOptions}: `maxRedirections`, `connectTimeout`, `proxy` and `danger`. The
+ * `signal` option can be used to abort the request.
+ * @returns A promise resolving to the `Response` of the request.
  *
  * @since 2.0.0
  */
