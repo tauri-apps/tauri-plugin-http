@@ -349,15 +349,16 @@ pub async fn fetch<R: Runtime>(
 
             // ensure we have an Origin header set
             if (cfg!(not(feature = "unsafe-headers")) || !headers.contains_key(header::ORIGIN))
-                && let Ok(url) = webview.url() {
-                    // The url crate returns OpaqueOrigin for tauri://localhost which serializes to "null"
-                    let origin = if url.scheme() == "tauri" {
-                        "tauri://localhost".to_string()
-                    } else {
-                        url.origin().ascii_serialization()
-                    };
-                    headers.append(header::ORIGIN, HeaderValue::from_str(&origin)?);
-                }
+                && let Ok(url) = webview.url()
+            {
+                // The url crate returns OpaqueOrigin for tauri://localhost which serializes to "null"
+                let origin = if url.scheme() == "tauri" {
+                    "tauri://localhost".to_string()
+                } else {
+                    url.origin().ascii_serialization()
+                };
+                headers.append(header::ORIGIN, HeaderValue::from_str(&origin)?);
+            }
 
             // In case empty origin is passed, remove it. Some services do not like Origin header
             // so this way we can remove it in explicit way. The default behaviour is still to set it
