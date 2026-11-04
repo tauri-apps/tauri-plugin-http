@@ -77,7 +77,6 @@ async function fetch(input, init) {
         : new Headers();
     const req = new Request(input, init);
     const buffer = await req.arrayBuffer();
-    const data = buffer.byteLength !== 0 ? Array.from(new Uint8Array(buffer)) : null;
     // append new headers created by the browser `Request` implementation,
     // if not already declared by the caller of this function
     for (const [key, value] of req.headers) {
@@ -101,16 +100,18 @@ async function fetch(input, init) {
     if (signal?.aborted) {
         throw new Error(ERROR_REQUEST_CANCELLED);
     }
-    const rid = await core.invoke('plugin:http|fetch', {
-        clientConfig: {
-            method: req.method,
-            url: req.url,
-            headers: mappedHeaders,
-            data,
-            maxRedirections,
-            connectTimeout,
-            proxy,
-            danger
+    const clientConfig = {
+        method: req.method,
+        url: req.url,
+        headers: mappedHeaders,
+        maxRedirections,
+        connectTimeout,
+        proxy,
+        danger
+    };
+    const rid = await core.invoke('plugin:http|fetch', new Uint8Array(buffer), {
+        headers: {
+            'client-config': encodeURIComponent(JSON.stringify(clientConfig))
         }
     });
     const abort = () => core.invoke('plugin:http|fetch_cancel', { rid }).catch(() => { });
