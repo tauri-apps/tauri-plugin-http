@@ -175,6 +175,10 @@ async function fetch(input, init) {
                 void dropBody();
             }
         });
+    if (body === null) {
+        // No stream will read or cancel this response's Rust resource.
+        await dropBody();
+    }
     const res = new Response(body, {
         status,
         statusText
